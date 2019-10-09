@@ -24,6 +24,8 @@ struct TwoPara
 
 	arma::uword n_bath();
 
+	double mass;
+
 	arma::mat H_elec(double const& x);
 	arma::mat H_dia(double const& x);
 };

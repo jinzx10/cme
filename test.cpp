@@ -27,6 +27,23 @@ int main() {
 
 	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
 
+	arma::uword nx = 100;
+	arma::vec xgrid = arma::linspace(x0_mpt-0.3, x0_fil+0.3, nx);
+
+	arma::mat H_store = arma::zeros(nx, 5);
+
+	for (arma::uword ix = 0; ix != nx; ++ix) {
+		double x = xgrid(ix);
+		arma::mat H_tmp = model.H_dia(x);
+		H_store(ix, 0) = x;
+		H_store(ix, 1) = H_tmp(0,0);
+		H_store(ix, 2) = H_tmp(1,1);
+		H_store(ix, 3) = H_tmp(0,1);
+		H_store(ix, 4) = E_mpt(x);
+		std::cout << ix+1 << "/" << nx << std::endl;
+	}
+
+	H_store.save("H_dia.txt", arma::raw_ascii);
 
 	return 0;
 }

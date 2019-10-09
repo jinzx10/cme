@@ -8,7 +8,11 @@ struct TwoPara
 {
 	using PES = std::function<double(double)>;
 
-	TwoPara(PES const& E_mpt_, PES const& E_fil_, arma::vec const& bath_, arma::vec const& cpl_, arma::uword const& n_occ_);
+	TwoPara(PES const& E_mpt_,
+			PES const& E_fil_,
+			arma::vec const& bath_,
+			arma::vec const& cpl_,
+			arma::uword const& n_occ_);
 
 
 	PES E_mpt;

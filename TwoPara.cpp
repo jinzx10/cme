@@ -9,7 +9,7 @@ arma::uword TwoPara::n_bath() {
 }
 
 arma::mat TwoPara::H_elec(double const& x) {
-	arma::mat H = arma::zeros(n_bath(), n_bath());
+	arma::mat H = arma::zeros(n_bath()+1, n_bath()+1);
 	H.diag() = arma::join_cols( arma::vec{E_fil(x) - E_mpt(x)}, bath );
 	H(0, arma::span(1, n_bath())) = cpl.st();
 	H(arma::span(1, n_bath()), 0) = cpl;

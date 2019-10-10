@@ -10,7 +10,7 @@ struct FSSH
 			double const& dt_,
 			arma::uword const& nt_);
 
-	void initialize(double const& x0_, double const& v0_, bool const& state0_, arma::cx_mat const& denmat0_);
+	void initialize(double const& x0_, double const& v0_, bool const& state0_, double const& rho00_, std::complex<double> const& rho01);
 	void propagate();
 	void velocity_verlet();
 	void quantum_Liouville();
@@ -18,6 +18,7 @@ struct FSSH
 	void collect();
 	double F(double const& x, bool const& state);
 	double dc01(double const& x);
+	arma::cx_vec drho_dt(arma::cx_vec const& rho);
 
 	TwoPara* model;
 	double mass;
@@ -26,7 +27,8 @@ struct FSSH
 	double a;
 	double dt;
 	bool state;
-	arma::cx_mat denmat;
+	double rho00;
+	std::complex<double> rho01;
 
 	arma::uword nt;
 	arma::uword counter;

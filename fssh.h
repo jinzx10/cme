@@ -10,29 +10,28 @@ struct FSSH
 			double const& dt_,
 			arma::uword const& nt_);
 
-	void initialize(double const& x0_, double const& v0_, bool const& state0_, double const& rho00_, std::complex<double> const& rho01);
+	void initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01);
 	void propagate();
-	void velocity_verlet();
-	void quantum_Liouville();
+	void onestep();
+	arma::vec dvar_dt(arma::vec const& var_);
 	void stochastic_hop();
 	void collect();
+
 	double F(double const& x, bool const& state);
 	double dc01(double const& x);
 	arma::cx_vec drho_dt(arma::cx_vec const& rho);
 
+
+
 	TwoPara* model;
 	double mass;
-	double x;
-	double v;
-	double a;
 	double dt;
-	bool state;
-	double rho00;
-	std::complex<double> rho01;
-
 	arma::uword nt;
+
+	bool state;
+	arma::vec var; // x, v, rho_00, Re(rho_01), Im(rho_01)
 	arma::uword counter;
-	
+
 	arma::vec x_t;
 	arma::vec v_t;
 	arma::uvec state_t;

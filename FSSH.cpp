@@ -1,7 +1,6 @@
-#include "fssh.h"
+#include "FSSH.h"
 
 double const DELTA = 1e-3;
-std::complex<double> I(0.0, 1.0);
 double const Gamma = 0.002;
 double const beta = 1.0 / 0.001;
 
@@ -15,6 +14,7 @@ FSSH::FSSH(	TwoPara* model_,
 
 void FSSH::initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01_) {
 	state = state0_;
+	var = arma::zeros(5);
 	var(0) = x0_;
 	var(1) = v0_;
 	var(2) = rho00_;
@@ -31,26 +31,21 @@ void FSSH::initialize(bool const& state0_, double const& x0_, double const& v0_,
 
 arma::vec FSSH::dvar_dt(arma::vec const& var_) {
 	arma::vec dvar = arma::zeros(5);
-	double x = var_(0);
-	double v = var_(1);
-	double rho00 = var_(2);
-	double rho01R = var_(3);
-	double rho01I = var_(4);
-
-	arma::vec eigval = arma::eig_sym( model->H_dia(x) );
+	arma::vec eigval = arma::eig_sym( model->H_dia(var_(0)) );
 	double E01 = eigval(0) - eigval(1);
 	double rho00eq = 1.0 / ( 1.0 + std::exp(beta*E01) );
+	double dc01_ = dc01(var_(0));
 
-	dvar(0) = v;
-	dvar(1) = F(x, state) / mass;
-	dvar(2) = -2.0 * v * dc01(x) * rho01R - Gamma * (rho00 - rho00eq);
-	dvar(3) = E01*rho01I + v*dc01(x)*(2.0*rho00-1.0) - Gamma/2.0*rho01R;
-	dvar(4) = -E01*rho01R - Gamma/2.0*rho01I;
-
-	return dvar;
+	return arma::vec{
+		var_(1),
+		F(var_(0)) / mass,
+		-2.0 * var_(1) * dc01_ * var_(3) - Gamma * (var_(2) - rho00eq),
+		E01 * var_(4) + var_(1) * dc01_ * (2.0*var_(2)-1.0) - Gamma / 2.0 * var_(3),
+		-E01 * var_(3) - Gamma / 2.0 * var_(4)
+	};
 }
 
-void FSSH::onestep() {
+void FSSH::rk4_onestep() {
 	arma::vec k1 = dt*dvar_dt(var);
 	arma::vec k2 = dt*dvar_dt(var + 0.5*k1);
 	arma::vec k3 = dt*dvar_dt(var + 0.5*k2);
@@ -58,7 +53,7 @@ void FSSH::onestep() {
 	var += (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0;
 }
 
-void FSSH::stochastic_hop() {
+void FSSH::hop() {
 	arma::arma_rng::set_seed_random();
 	double x = var(0);
 	double v = var(1);
@@ -89,13 +84,15 @@ void FSSH::collect() {
 
 void FSSH::propagate() {
 	for (counter = 1; counter != nt; ++counter) {
-		onestep();
-		stochastic_hop();
+		rk4_onestep();
+		hop();
 		collect();
+		std::cout << "x = " << var(0) << "   v = " << var(1) << "   state = " << state
+			<< "   F = " << F(var(0)) << std::endl;
 	}
 }
 
-double FSSH::F(double const& x, bool const& state) {
+double FSSH::F(double const& x) {
 	arma::vec valm = arma::eig_sym( model->H_dia(x-DELTA) );
 	arma::vec valp = arma::eig_sym( model->H_dia(x+DELTA) );
 	return ( valm(state) - valp(state) ) / 2.0 / DELTA;
@@ -107,7 +104,7 @@ double FSSH::dc01(double const& x) {
 	arma::vec eigval;
 	arma::eig_sym(eigval, eigvec, model->H_dia(x));
 	return std::abs(arma::as_scalar(
-				eigvec.col(0) * DH * eigvec.col(1) / (eigval(1) - eigval(0)) ) );
+				eigvec.col(0).t() * DH * eigvec.col(1) / (eigval(1) - eigval(0)) ) );
 }
 
 

@@ -8,20 +8,19 @@ struct FSSH
 	FSSH(	TwoPara* model_,
 			double const& mass_,
 			double const& dt_,
-			arma::uword const& nt_);
+			arma::uword const& nt_	);
 
-	void initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01);
+	void initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01_);
 	void propagate();
-	void onestep();
-	arma::vec dvar_dt(arma::vec const& var_);
-	void stochastic_hop();
+
+	// three tasks in one progagation step
+	void rk4_onestep();
+	void hop();
 	void collect();
 
-	double F(double const& x, bool const& state);
+	double F(double const& x);
 	double dc01(double const& x);
-	arma::cx_vec drho_dt(arma::cx_vec const& rho);
-
-
+	arma::vec dvar_dt(arma::vec const& var_);
 
 	TwoPara* model;
 	double mass;
@@ -32,6 +31,7 @@ struct FSSH
 	arma::vec var; // x, v, rho_00, Re(rho_01), Im(rho_01)
 	arma::uword counter;
 
+	// data storage for one trajectory
 	arma::vec x_t;
 	arma::vec v_t;
 	arma::uvec state_t;

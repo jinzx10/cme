@@ -50,6 +50,23 @@ int main() {
 
 	double dt = 1;
 	double nt = 100;
+
+	// store all data
+	arma::mat x_t;
+	arma::mat v_t;
+	arma::umat state_t;
+
+	// store local data
+	arma::mat local_x_t = arma::zeros(nt, local_num_trajs);
+	arma::mat local_v_t = arma::zeros(nt, local_num_trajs);
+	arma::umat local_state_t = arma::zeros<arma::umat>(nt, local_num_trajs);
+
+	if (id == 0) {
+		x_t.zeros(nt, num_trajs);
+		v_t.zeros(nt, num_trajs);
+		state_t.zeros(nt, num_trajs);
+	}
+
 	FSSH fssh(&model, mass, dt, nt, Gamma);
 
 	for (int i = 0; i != local_num_trajs; ++i) {
@@ -57,7 +74,14 @@ int main() {
 		double v0 = std::sqrt(2*0.001/mass); // barrier height ~ 0.002
 		fssh.initialize(0, x0, v0, 1.0, 0.0);
 		fssh.propagate();
+		local_x_t.col(i) = fssh.x_t;
+		local_v_t.col(i) = fssh.v_t;
+		local_state_t.col(i) = fssh.state_t;
 	}
+
+	::MPI_Gather(local_x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	::MPI_Gather(local_v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
 	::MPI_Finalize();

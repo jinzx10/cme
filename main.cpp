@@ -1,8 +1,24 @@
 #include "TwoPara.h"
+#include "FSSH.h"
+#include <mpi.h>
+#include <sstream>
 
 double const pi = acos(-1.0);
 
 int main() {
+
+	int id, nprocs;
+	int num_trajs = 10000;
+
+	::MPI_Init(nullptr, nullptr);
+	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	::MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+	int local_num_trajs = num_trajs / nprocs;
+
+	/////////////////////////////////////////////////////////////////////////////
+	//							Two-Parabola model
+	/////////////////////////////////////////////////////////////////////////////
 	double x0_mpt = 2;
 	double x0_fil = 3;
 	double omega_mpt = 0.04;
@@ -28,6 +44,23 @@ int main() {
 	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
 
 
+	/////////////////////////////////////////////////////////////////////////////
+	//							FSSH dynamics
+	/////////////////////////////////////////////////////////////////////////////
+
+	double dt = 1;
+	double nt = 100;
+	FSSH fssh(&model, mass, dt, nt, Gamma);
+
+	for (int i = 0; i != local_num_trajs; ++i) {
+		double x0 = 2.0;
+		double v0 = std::sqrt(2*0.001/mass); // barrier height ~ 0.002
+		fssh.initialize(0, x0, v0, 1.0, 0.0);
+		fssh.propagate();
+	}
+
+
+	::MPI_Finalize();
 
 	return 0;
 }

@@ -8,7 +8,8 @@ struct FSSH
 	FSSH(	TwoPara* model_,
 			double const& mass_,
 			double const& dt_,
-			arma::uword const& nt_	);
+			arma::uword const& nt_,
+			double const& Gamma_	);
 
 	void initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01_);
 	void propagate();
@@ -23,6 +24,7 @@ struct FSSH
 	arma::vec dvar_dt(arma::vec const& var_);
 
 	TwoPara* model;
+	double Gamma; // additional damping term
 	double mass;
 	double dt;
 	arma::uword nt;

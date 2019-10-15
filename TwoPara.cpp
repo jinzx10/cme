@@ -33,9 +33,9 @@ arma::mat TwoPara::H_dia(double const& x) {
 	double nH = n0 * E0;
 	double nHn = n0*nv*E0 - nv*n0E0 + n0*nvEv + n0*n0*E0;
 
-	H(0,0) = (E0 + nHn - nH*2) / (1-n0);
+	H(0,0) = (E0 + nHn - nH*2) / (1-n0) + E_mpt(x);
 	H(0,1) = (nH - nHn) / sqrt(n0*(1-n0));
 	H(1,0) = H(0,1);
-	H(1,1) = nHn / n0;
+	H(1,1) = nHn / n0 + E_mpt(x);
 	return H;
 }

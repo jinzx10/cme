@@ -29,8 +29,8 @@ int main() {
 	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
 
 	double dt = 1;
-	double nt = 10;
-	FSSH fssh(&model, mass, dt, nt);
+	double nt = 100;
+	FSSH fssh(&model, mass, dt, nt, Gamma);
 
 	double x0 = 2.0;
 	double v0 = std::sqrt(2*0.001/mass); // barrier height ~ 0.002

@@ -1,6 +1,11 @@
 #include "TwoPara.h"
 
-TwoPara::TwoPara(PES const& E_mpt_, PES const& E_fil_, arma::vec const& bath_, arma::vec const& cpl_, arma::uword const& n_occ_):
+TwoPara::TwoPara(
+		PES				const&		E_mpt_,
+		PES				const& 		E_fil_,
+		arma::vec		const& 		bath_,
+		arma::vec		const& 		cpl_,
+		arma::uword		const& 		n_occ_		):
 	E_mpt(E_mpt_), E_fil(E_fil_), bath(bath_), cpl(cpl_), n_occ(n_occ_)
 {}
 
@@ -24,7 +29,6 @@ arma::mat TwoPara::H_dia(double const& x) {
 
 	double E0 = arma::sum( eigval(arma::span(0, n_occ-1)) );
 	double n0 = arma::sum( arma::square(eigvec(0, arma::span(0, n_occ-1))) );
-	//double Ev = arma::sum( eigval(arma::span(n_occ, n_bath())) );
 	double nv = arma::sum( arma::square(eigvec(0, arma::span(n_occ, n_bath()))) );
 	double n0E0 = arma::as_scalar( arma::square(eigvec(0, arma::span(0, n_occ-1))) *
 			eigval(arma::span(0, n_occ-1)) );

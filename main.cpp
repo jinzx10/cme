@@ -8,7 +8,7 @@ double const pi = acos(-1.0);
 int main() {
 
 	int id, nprocs;
-	int num_trajs = 100;
+	int num_trajs = 1000;
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -49,7 +49,7 @@ int main() {
 	/////////////////////////////////////////////////////////////////////////////
 
 	double dt = 1;
-	double nt = 100;
+	double nt = 1000;
 
 	// store all data
 	arma::mat x_t;
@@ -86,11 +86,10 @@ int main() {
 	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	if (id == 0) {
-		x_t.save("x_t.txt", arma::raw_ascii);
-		v_t.save("v_t.txt", arma::raw_ascii);
-		state_t.save("state_t.txt", arma::raw_ascii);
+		x_t.save("/home/zuxin/job/cme/x_t.txt", arma::raw_ascii);
+		v_t.save("/home/zuxin/job/cme/v_t.txt", arma::raw_ascii);
+		state_t.save("/home/zuxin/job/cme/state_t.txt", arma::raw_ascii);
 	}
-
 
 	::MPI_Finalize();
 

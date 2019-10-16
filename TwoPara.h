@@ -8,26 +8,26 @@ struct TwoPara
 {
 	using PES = std::function<double(double)>;
 
-	TwoPara(PES const& E_mpt_,
-			PES const& E_fil_,
-			arma::vec const& bath_,
-			arma::vec const& cpl_,
-			arma::uword const& n_occ_);
+	TwoPara(	PES				const&		E_mpt_,
+				PES				const& 		E_fil_,
+				arma::vec		const& 		bath_,
+				arma::vec		const& 		cpl_,
+				arma::uword		const& 		n_occ_		);
 
 
-	PES E_mpt;
-	PES E_fil;
+	PES				E_mpt;
+	PES				E_fil;
 
-	arma::vec bath;
-	arma::vec cpl;
-	arma::uword n_occ;
+	arma::vec		bath;
+	arma::vec		cpl;
+	arma::uword 	n_occ;
 
-	arma::uword n_bath();
+	arma::uword 	n_bath();
 
-	double mass;
+	double			mass;
 
-	arma::mat H_elec(double const& x);
-	arma::mat H_dia(double const& x);
+	arma::mat		H_elec(double const& x);
+	arma::mat		H_dia(double const& x);
 };
 
 #endif

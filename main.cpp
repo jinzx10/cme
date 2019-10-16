@@ -8,7 +8,7 @@ double const pi = acos(-1.0);
 int main() {
 
 	int id, nprocs;
-	int num_trajs = 10000;
+	int num_trajs = 100;
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -69,9 +69,11 @@ int main() {
 
 	FSSH fssh(&model, mass, dt, nt, Gamma);
 
+	double sigma_x = std::sqrt(1.0/mass/omega_mpt);
+	double sigma_v = std::sqrt(omega_mpt/mass);
 	for (int i = 0; i != local_num_trajs; ++i) {
-		double x0 = 2.0;
-		double v0 = std::sqrt(2*0.001/mass); // barrier height ~ 0.002
+		double x0 = 2.0 + arma::randn()*sigma_x;
+		double v0 = std::sqrt(2*0.001/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
 		fssh.initialize(0, x0, v0, 1.0, 0.0);
 		fssh.propagate();
 		local_x_t.col(i) = fssh.x_t;
@@ -82,6 +84,12 @@ int main() {
 	::MPI_Gather(local_x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	::MPI_Gather(local_v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (id == 0) {
+		x_t.save("x_t.txt", arma::raw_ascii);
+		v_t.save("v_t.txt", arma::raw_ascii);
+		state_t.save("state_t.txt", arma::raw_ascii);
+	}
 
 
 	::MPI_Finalize();

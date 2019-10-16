@@ -87,8 +87,8 @@ void FSSH::propagate() {
 		rk4_onestep();
 		hop();
 		collect();
-		std::cout << "x = " << var(0) << "   v = " << var(1) << "   state = " << state
-			<< "   F = " << F(var(0)) << std::endl;
+		//std::cout << "x = " << var(0) << "   v = " << var(1) << "   state = " << state
+		//	<< "   F = " << F(var(0)) << std::endl;
 	}
 }
 

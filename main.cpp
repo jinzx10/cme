@@ -33,7 +33,7 @@ int main() {
 
 	double bath_width = 0.04;
 	double bath_center = 0;
-	arma::uword nbath = 800;
+	arma::uword nbath = 600;
 	arma::vec bath = arma::linspace(bath_center-bath_width, bath_center+bath_width, nbath);
 	double dos = 1.0 / ( bath(1) - bath(0) );
 
@@ -69,12 +69,15 @@ int main() {
 
 	FSSH fssh(&model, mass, dt, nt, Gamma);
 
-	double sigma_x = std::sqrt(1.0/mass/omega_mpt);
-	double sigma_v = std::sqrt(omega_mpt/mass);
+	// Wigner quasi-probability of the harmonic ground state:
+	// exp(-m*omega*x^2/hbar) * exp(-p^2/m/omega/hbar)
+	double sigma_x = std::sqrt(0.5/mass/omega_mpt);
+	double sigma_v = std::sqrt(omega_mpt/mass/2.0);
 	for (int i = 0; i != local_num_trajs; ++i) {
-		double x0 = 2.0 + arma::randn()*sigma_x;
+		double x0 = x0_mpt + arma::randn()*sigma_x;
 		double v0 = std::sqrt(2*0.001/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
-		fssh.initialize(0, x0, v0, 1.0, 0.0);
+		bool state0 = false;
+		fssh.initialize(state0, x0, v0, 1.0, 0.0);
 		fssh.propagate();
 		local_x_t.col(i) = fssh.x_t;
 		local_v_t.col(i) = fssh.v_t;

@@ -18,7 +18,7 @@ int main() {
 
 	double bath_width = 0.04;
 	double bath_center = 0;
-	arma::uword nbath = 800;
+	arma::uword nbath = 600;
 	arma::vec bath = arma::linspace(bath_center-bath_width, bath_center+bath_width, nbath);
 	double dos = 1.0 / ( bath(1) - bath(0) );
 

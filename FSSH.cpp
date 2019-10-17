@@ -55,23 +55,25 @@ void FSSH::rk4_onestep() {
 
 void FSSH::hop() {
 	arma::arma_rng::set_seed_random();
+
 	double x = var(0);
 	double v = var(1);
 	double rho00 = var(2);
-	double rho01R = var(3);
+	double drho00 = dvar_dt(var)(2);
+
 	arma::vec eigval = arma::eig_sym(model->H_dia(x));
-	double DE = eigval(1) - eigval(0);
+	double E10 = eigval(1) - eigval(0);
+
 	if (state) { // excited -> ground
-		double b01 = 2.0 * rho01R * v * dc01(x); // dc10 = -dc01
-		if ( arma::randu() < b01*dt/(1.0-rho00) ) {
+		if ( arma::randu() < (drho00 > 0) * dt * drho00 / (1.0-rho00) ) {
 			state = 0;
-			v = std::sqrt( v*v + 2.0 * DE / mass );
+			v = std::sqrt( v*v + 2.0 * E10 / mass );
 		}
 	} else { // ground -> excited
-		double b10 = -2.0 * rho01R * v * dc01(x);
-		if ( arma::randu() < b10*dt/rho00 && 0.5 * mass * v * v > DE ) {
+		if ( arma::randu() < (drho00 < 0) * dt * (-drho00) / rho00 && 
+				0.5 * mass * v * v > E10 ) {
 			state = 1;
-			v = std::sqrt( v*v - 2.0 * DE / mass );
+			v = std::sqrt( v*v - 2.0 * E10 / mass );
 		}
 	}
 }
@@ -87,8 +89,10 @@ void FSSH::propagate() {
 		rk4_onestep();
 		hop();
 		collect();
-		//std::cout << "x = " << var(0) << "   v = " << var(1) << "   state = " << state
-		//	<< "   F = " << F(var(0)) << std::endl;
+#ifdef PRINT_PROGRESS
+		std::cout << "x = " << var(0) << "   v = " << var(1) << "   state = " << state
+			<< std::endl;
+#endif
 	}
 }
 

@@ -2,13 +2,20 @@
 #include "FSSH.h"
 #include <mpi.h>
 #include <sstream>
+#include <string>
+
+#ifdef TIMING
+#include <chrono>
+using iclock = std::chrono::high_resolution_clock;
+#endif
 
 double const pi = acos(-1.0);
 
 int main() {
 
 	int id, nprocs;
-	int num_trajs = 1000;
+	int num_trajs = 960;
+	std::string datadir = "/home/zuxin/job/cme/data/";
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -61,10 +68,18 @@ int main() {
 	arma::mat local_v_t = arma::zeros(nt, local_num_trajs);
 	arma::umat local_state_t = arma::zeros<arma::umat>(nt, local_num_trajs);
 
+#ifdef TIMING
+	iclock::time_point start;
+	std::chrono::duration<double> dur;
+#endif
+
 	if (id == 0) {
 		x_t.zeros(nt, num_trajs);
 		v_t.zeros(nt, num_trajs);
 		state_t.zeros(nt, num_trajs);
+#ifdef TIMING
+		start = iclock::now();
+#endif
 	}
 
 	FSSH fssh(&model, mass, dt, nt, Gamma);
@@ -75,7 +90,7 @@ int main() {
 	double sigma_v = std::sqrt(omega_mpt/mass/2.0);
 	for (int i = 0; i != local_num_trajs; ++i) {
 		double x0 = x0_mpt + arma::randn()*sigma_x;
-		double v0 = std::sqrt(2*0.001/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
+		double v0 = std::sqrt(2*0.002/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
 		bool state0 = false;
 		fssh.initialize(state0, x0, v0, 1.0, 0.0);
 		fssh.propagate();
@@ -89,9 +104,13 @@ int main() {
 	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	if (id == 0) {
-		x_t.save("/home/zuxin/job/cme/x_t.txt", arma::raw_ascii);
-		v_t.save("/home/zuxin/job/cme/v_t.txt", arma::raw_ascii);
-		state_t.save("/home/zuxin/job/cme/state_t.txt", arma::raw_ascii);
+		x_t.save(datadir+"x_E0002.txt", arma::raw_ascii);
+		v_t.save(datadir+"v_E0002.txt", arma::raw_ascii);
+		state_t.save(datadir+"state_E0002.txt", arma::raw_ascii);
+#ifdef TIMING
+		dur = iclock::now() - start;
+		std::cout << dur.count() << std::endl;
+#endif
 	}
 
 	::MPI_Finalize();

@@ -3,43 +3,48 @@
 TwoPara::TwoPara(
 		PES				const&		E_mpt_,
 		PES				const& 		E_fil_,
-		arma::vec		const& 		bath_,
-		arma::vec		const& 		cpl_,
-		arma::uword		const& 		n_occ_		):
-	E_mpt(E_mpt_), E_fil(E_fil_), bath(bath_), cpl(cpl_), n_occ(n_occ_)
-{}
-
-arma::uword TwoPara::n_bath() {
-	return bath.n_elem;
+		double			const&		Gamma_, 
+		double			const&		E_fermi_,
+		double			const&		W_band_		):
+	E_mpt(E_mpt_), E_fil(E_fil_), Gamma(Gamma_), E_fermi(E_fermi_), W_band(W_band_)
+{
+	double n_grid = (E_fermi + W_band) / Gamma * 30;
+	E_grid = arma::linspace(-W_band, E_fermi, n_grid);
+	dE_grid = E_grid(1) - E_grid(0);
+	Re_Self = Gamma / 2.0 / arma::datum::pi *
+		arma::log( ( W_band + E_grid ) / ( W_band - E_grid ) );
 }
 
-arma::mat TwoPara::H_elec(double const& x) {
-	arma::mat H = arma::zeros(n_bath()+1, n_bath()+1);
-	H.diag() = arma::join_cols( arma::vec{E_fil(x) - E_mpt(x)}, bath );
-	H(0, arma::span(1, n_bath())) = cpl.st();
-	H(arma::span(1, n_bath()), 0) = cpl;
-	return H;
+
+double TwoPara::Ed(double const& x) {
+	return E_fil(x) - E_mpt(x);
 }
+
+
+double TwoPara::ev_n(double const& x) {
+	return dE_grid * arma::sum( Gamma / 2.0 / arma::datum::pi /
+			( arma::square(E_grid - (E_fil(x) - E_mpt(x)) - Re_Self) + Gamma*Gamma/4.0 ) );
+}
+
+
+double TwoPara::ev_H(double const& x) { // bath contribution is deducted
+	return dE_grid * arma::sum( Gamma / 2.0 / arma::datum::pi * E_grid /
+			( arma::square(E_grid - Ed(x) - Re_Self) + Gamma*Gamma/4.0 ) );
+}
+
 
 arma::mat TwoPara::H_dia(double const& x) {
 	arma::mat H = arma::zeros(2,2);
-	arma::mat eigvec;
-	arma::vec eigval;
-	arma::eig_sym(eigval, eigvec, H_elec(x));
 
-	double E0 = arma::sum( eigval(arma::span(0, n_occ-1)) );
-	double n0 = arma::sum( arma::square(eigvec(0, arma::span(0, n_occ-1))) );
-	double nv = arma::sum( arma::square(eigvec(0, arma::span(n_occ, n_bath()))) );
-	double n0E0 = arma::as_scalar( arma::square(eigvec(0, arma::span(0, n_occ-1))) *
-			eigval(arma::span(0, n_occ-1)) );
-	double nvEv = arma::as_scalar( arma::square(eigvec(0, arma::span(n_occ, n_bath()))) *
-			eigval(arma::span(n_occ, n_bath())) );
-	double nH = n0 * E0;
-	double nHn = n0*nv*E0 - nv*n0E0 + n0*nvEv + n0*n0*E0;
+	double n = ev_n(x);
+	double E = ev_H(x);
+	double nH1n = E - Ed(x)*n;
+	double nHn = n*E - nH1n;
 
-	H(0,0) = (E0 + nHn - nH*2) / (1-n0) + E_mpt(x);
-	H(0,1) = (nH - nHn) / sqrt(n0*(1-n0));
+	H(0,1) = nH1n / std::sqrt(n*(1.0-n));
 	H(1,0) = H(0,1);
-	H(1,1) = nHn / n0 + E_mpt(x);
+	H(1,1) = nHn / n;
+	H(0,0) = (E - 2.0*n*E + nHn) / (1.0-n);
+
 	return H;
 }

@@ -21,6 +21,7 @@ struct FSSH
 
 	// physical quantities
 	double			F(double const& x);
+	double			F(double const& x, bool const& state_);
 	double 			dc01(double const& x);
 
 	// first-order differential equation

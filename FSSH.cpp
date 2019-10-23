@@ -70,10 +70,13 @@ void FSSH::hop() {
 			v = std::sqrt( v*v + 2.0 * E10 / mass );
 		}
 	} else { // ground -> excited
-		if ( arma::randu() < (drho00 < 0) * dt * (-drho00) / rho00 && 
-				0.5 * mass * v * v > E10 ) {
-			state = 1;
-			v = std::sqrt( v*v - 2.0 * E10 / mass );
+		if ( arma::randu() < (drho00 < 0) * dt * (-drho00) / rho00 ) {
+			if ( 0.5 * mass * v * v > E10 ) {
+				state = 1;
+				v = std::sqrt( v*v - 2.0 * E10 / mass );
+			} else {
+				if ( F(x,1)*v < 0 ) v = -v;
+			}
 		}
 	}
 }
@@ -100,6 +103,12 @@ double FSSH::F(double const& x) {
 	arma::vec valm = arma::eig_sym( model->H_dia(x-DELTA) );
 	arma::vec valp = arma::eig_sym( model->H_dia(x+DELTA) );
 	return ( valm(state) - valp(state) ) / 2.0 / DELTA;
+}
+
+double FSSH::F(double const& x, bool const& state_) {
+	arma::vec valm = arma::eig_sym( model->H_dia(x-DELTA) );
+	arma::vec valp = arma::eig_sym( model->H_dia(x+DELTA) );
+	return ( valm(state_) - valp(state_) ) / 2.0 / DELTA;
 }
 
 double FSSH::dc01(double const& x) {

@@ -10,23 +10,26 @@ struct TwoPara
 
 	TwoPara(	PES				const&		E_mpt_,
 				PES				const& 		E_fil_,
-				arma::vec		const& 		bath_,
-				arma::vec		const& 		cpl_,
-				arma::uword		const& 		n_occ_		);
+				double			const& 		Gamma_,
+				double			const&		E_fermi_,
+				double			const&		W_band_		);
 
 
 	PES				E_mpt;
 	PES				E_fil;
 
-	arma::vec		bath;
-	arma::vec		cpl;
-	arma::uword 	n_occ;
+	double			Gamma;
+	double			E_fermi;
+	double			W_band;
 
-	arma::uword 	n_bath();
+	double			dE_grid;
+	arma::vec		E_grid;
+	arma::vec		Re_Self;
 
-	double			mass;
+	double			Ed(double const& x);
+	double			ev_n(double const& x);
+	double			ev_H(double const& x);
 
-	arma::mat		H_elec(double const& x);
 	arma::mat		H_dia(double const& x);
 };
 

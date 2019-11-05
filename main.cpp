@@ -14,8 +14,8 @@ double const pi = acos(-1.0);
 int main() {
 
 	int id, nprocs;
-	int num_trajs = 960;
-	std::string datadir = "/home/zuxin/job/cme/data/";
+	int num_trajs = 9600;
+	std::string datadir = "/home/zuxin/job/cme/data/20191023/";
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -39,16 +39,9 @@ int main() {
 		(x - x0_fil) * (x - x0_fil) + dE_fil;};
 
 	double bath_width = 0.04;
-	double bath_center = 0;
-	arma::uword nbath = 600;
-	arma::vec bath = arma::linspace(bath_center-bath_width, bath_center+bath_width, nbath);
-	double dos = 1.0 / ( bath(1) - bath(0) );
-
 	double Gamma = 0.002;
-	double V = sqrt(Gamma/2/pi/dos);
-	arma::vec cpl = arma::ones(nbath) * V;
 
-	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
+	TwoPara model(E_mpt, E_fil, Gamma, 0.0, bath_width);
 
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -56,7 +49,7 @@ int main() {
 	/////////////////////////////////////////////////////////////////////////////
 
 	double dt = 1;
-	double nt = 1000;
+	double nt = 10000;
 
 	// store all data
 	arma::mat x_t;
@@ -83,16 +76,27 @@ int main() {
 	}
 
 	FSSH fssh(&model, mass, dt, nt, Gamma);
+	arma::arma_rng::set_seed_random();
 
 	// Wigner quasi-probability of the harmonic ground state:
 	// exp(-m*omega*x^2/hbar) * exp(-p^2/m/omega/hbar)
 	double sigma_x = std::sqrt(0.5/mass/omega_mpt);
 	double sigma_v = std::sqrt(omega_mpt/mass/2.0);
 	for (int i = 0; i != local_num_trajs; ++i) {
+		// nuclear 
 		double x0 = x0_mpt + arma::randn()*sigma_x;
 		double v0 = std::sqrt(2*0.002/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
-		bool state0 = false;
-		fssh.initialize(state0, x0, v0, 1.0, 0.0);
+
+		// electronic
+		arma::mat H_init = model.H_dia(x0);
+		arma::mat eigvec;
+		arma::vec eigval;
+		arma::eig_sym(eigval, eigvec, H_init);
+		arma::mat rho_dia = {{1,0},{0,0}};
+		arma::mat rho_adi = eigvec.t() * rho_dia * eigvec;
+
+		bool state0 = ( arma::randu() < rho_adi(0,0) ); // does not really matter;
+		fssh.initialize(state0, x0, v0, rho_adi(0,0), rho_adi(0,1));
 		fssh.propagate();
 		local_x_t.col(i) = fssh.x_t;
 		local_v_t.col(i) = fssh.v_t;

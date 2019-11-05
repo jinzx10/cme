@@ -16,22 +16,17 @@ int main() {
 		(x - x0_fil) * (x - x0_fil) + dE_fil;};
 
 	double bath_width = 0.04;
-	double bath_center = 0;
-	arma::uword nbath = 800;
-	arma::vec bath = arma::linspace(bath_center-bath_width, bath_center+bath_width, nbath);
-	double dos = 1.0 / ( bath(1) - bath(0) );
 
 	double Gamma = 0.002;
-	double V = sqrt(Gamma/2/pi/dos);
-	arma::vec cpl = arma::ones(nbath) * V;
 
-	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
+	TwoPara model(E_mpt, E_fil, Gamma, 0.0, bath_width);
 
 	arma::uword nx = 100;
 	arma::vec xgrid = arma::linspace(x0_mpt-0.3, x0_fil+0.3, nx);
 
 	arma::mat H_store = arma::zeros(nx, 5);
 
+	std::cout << "begin:" << std::endl;
 	for (arma::uword ix = 0; ix != nx; ++ix) {
 		double x = xgrid(ix);
 		arma::mat H_tmp = model.H_dia(x);
@@ -40,7 +35,7 @@ int main() {
 		H_store(ix, 2) = H_tmp(1,1);
 		H_store(ix, 3) = H_tmp(0,1);
 		H_store(ix, 4) = E_mpt(x);
-		std::cout << ix+1 << "/" << nx << std::endl;
+		std::cout << "\e[A" << ix+1 << "/" << nx << std::endl;
 	}
 
 	H_store.save("H_dia.txt", arma::raw_ascii);

@@ -38,7 +38,7 @@ arma::vec FSSH::dvar_dt(arma::vec const& var_) {
 
 	return arma::vec{
 		var_(1),
-		F(var_(0)) / mass,
+		F(var_(0), state) / mass,
 		-2.0 * var_(1) * dc01_ * var_(3) - Gamma * (var_(2) - rho00eq),
 		E01 * var_(4) + var_(1) * dc01_ * (2.0*var_(2)-1.0) - Gamma / 2.0 * var_(3),
 		-E01 * var_(3) - Gamma / 2.0 * var_(4)
@@ -74,8 +74,8 @@ void FSSH::hop() {
 			if ( 0.5 * mass * v * v > E10 ) {
 				state = 1;
 				v = std::sqrt( v*v - 2.0 * E10 / mass );
-			} else {
-				if ( F(x,1)*v < 0 ) v = -v;
+			} else { // frustrated hop
+				if ( F(x,1)*v < 0 ) v = -v; // velocity reversal
 			}
 		}
 	}
@@ -97,12 +97,6 @@ void FSSH::propagate() {
 			<< std::endl;
 #endif
 	}
-}
-
-double FSSH::F(double const& x) {
-	arma::vec valm = arma::eig_sym( model->H_dia(x-DELTA) );
-	arma::vec valp = arma::eig_sym( model->H_dia(x+DELTA) );
-	return ( valm(state) - valp(state) ) / 2.0 / DELTA;
 }
 
 double FSSH::F(double const& x, bool const& state_) {

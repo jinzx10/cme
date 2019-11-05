@@ -1,7 +1,9 @@
 #include "TwoPara.h"
 #include "FSSH.h"
+#include <chrono>
 
 double const pi = acos(-1.0);
+using iclock = std::chrono::high_resolution_clock;
 
 int main() {
 	double x0_mpt = 2;
@@ -17,16 +19,12 @@ int main() {
 		(x - x0_fil) * (x - x0_fil) + dE_fil;};
 
 	double bath_width = 0.04;
-	double bath_center = 0;
-	arma::uword nbath = 600;
-	arma::vec bath = arma::linspace(bath_center-bath_width, bath_center+bath_width, nbath);
-	double dos = 1.0 / ( bath(1) - bath(0) );
-
 	double Gamma = 0.002;
-	double V = sqrt(Gamma/2/pi/dos);
-	arma::vec cpl = arma::ones(nbath) * V;
 
-	TwoPara model(E_mpt, E_fil, bath, cpl, nbath/2);
+	iclock::time_point start = iclock::now();
+	std::chrono::duration<double> dur;
+
+	TwoPara model(E_mpt, E_fil, Gamma, 0.0, bath_width);
 
 	double dt = 1;
 	double nt = 100;
@@ -36,6 +34,9 @@ int main() {
 	double v0 = std::sqrt(2*0.001/mass); // barrier height ~ 0.002
 	fssh.initialize(0, x0, v0, 1.0, 0.0);
 	fssh.propagate();
+
+	dur = iclock::now() - start;
+	std::cout << "time elapsed = " << dur.count() << " seconds" << std::endl;
 
 	return 0;
 }

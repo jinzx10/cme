@@ -43,8 +43,8 @@ arma::mat TwoPara::H_dia(double const& x) {
 
 	H(0,1) = nH1n / std::sqrt(n*(1.0-n));
 	H(1,0) = H(0,1);
-	H(1,1) = nHn / n;
-	H(0,0) = (E - 2.0*n*E + nHn) / (1.0-n);
+	H(1,1) = nHn / n + E_mpt(x);
+	H(0,0) = (E - 2.0*n*E + nHn) / (1.0-n) + E_mpt(x);
 
 	return H;
 }

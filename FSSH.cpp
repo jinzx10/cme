@@ -1,14 +1,14 @@
 #include "FSSH.h"
 
-double const DELTA = 1e-3;
-double const beta = 1.0 / 0.001;
+double const DELTA = 1e-3; // finite difference step size
 
 FSSH::FSSH(		TwoPara*					model_,
 				double			const&		mass_,
 				double			const&		dt_,
 				arma::uword		const& 		nt_,
-				double			const&		Gamma_		):
-	model(model_), Gamma(Gamma_), mass(mass_), dt(dt_), nt(nt_),
+				double			const&		Gamma_,
+				double			const&		beta_		):
+	model(model_), Gamma(Gamma_), beta(beta_), mass(mass_), dt(dt_), nt(nt_),
 	x_t(arma::zeros(nt)), v_t(arma::zeros(nt)), state_t(arma::zeros<arma::uvec>(nt))
 {}
 

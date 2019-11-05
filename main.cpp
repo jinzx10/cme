@@ -27,21 +27,22 @@ int main() {
 	//							Two-Parabola model
 	/////////////////////////////////////////////////////////////////////////////
 	double x0_mpt = 2;
-	double x0_fil = 3;
-	double omega_mpt = 0.04;
-	double omega_fil = 0.04;
+	double x0_fil = 2.8;
+	double omega_mpt = 0.01;
+	double omega_fil = 0.01;
 	double mass = 7;
-	double dE_fil = 0.001;
+	double dE_fil = 0.000;
 
 	auto E_mpt = [&](double const& x) { return 0.5 * mass * omega_mpt * omega_mpt * 
 		(x - x0_mpt) * (x - x0_mpt);};
 	auto E_fil = [&](double const& x) { return 0.5 * mass * omega_fil * omega_fil * 
 		(x - x0_fil) * (x - x0_fil) + dE_fil;};
 
-	double bath_width = 0.04;
-	double Gamma = 0.002;
+	double bath_width = 0.06;
+	double mu = 0.0;
+	double Gamma = 5.0e-5;
 
-	TwoPara model(E_mpt, E_fil, Gamma, 0.0, bath_width);
+	TwoPara model(E_mpt, E_fil, Gamma, mu, bath_width);
 
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,8 @@ int main() {
 	/////////////////////////////////////////////////////////////////////////////
 
 	double dt = 1;
-	double nt = 10000;
+	double nt = 300000;
+	double beta = 1.0 / 0.001;
 
 	// store all data
 	arma::mat x_t;
@@ -75,7 +77,7 @@ int main() {
 #endif
 	}
 
-	FSSH fssh(&model, mass, dt, nt, Gamma);
+	FSSH fssh(&model, mass, dt, nt, Gamma, beta);
 	arma::arma_rng::set_seed_random();
 
 	// Wigner quasi-probability of the harmonic ground state:

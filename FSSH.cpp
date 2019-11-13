@@ -1,12 +1,12 @@
 #include "FSSH.h"
 
-double const DELTA = 1e-3; // finite difference step size
+double const DELTA = 1e-3; // finite difference step size for x
 
 FSSH::FSSH(		TwoPara*					model_,
 				double			const&		mass_,
 				double			const&		dt_,
 				arma::uword		const& 		nt_,
-				double			const&		Gamma_,
+				DecayRate		const&		Gamma_,
 				double			const&		beta_		):
 	model(model_), Gamma(Gamma_), beta(beta_), mass(mass_), dt(dt_), nt(nt_),
 	x_t(arma::zeros(nt)), v_t(arma::zeros(nt)), state_t(arma::zeros<arma::uvec>(nt))
@@ -39,9 +39,9 @@ arma::vec FSSH::dvar_dt(arma::vec const& var_) {
 	return arma::vec{
 		var_(1),
 		F(var_(0), state) / mass,
-		-2.0 * var_(1) * dc01_ * var_(3) - Gamma * (var_(2) - rho00eq),
-		E01 * var_(4) + var_(1) * dc01_ * (2.0*var_(2)-1.0) - Gamma / 2.0 * var_(3),
-		-E01 * var_(3) - Gamma / 2.0 * var_(4)
+		-2.0 * var_(1) * dc01_ * var_(3) - Gamma(var_(0)) * (var_(2) - rho00eq),
+		E01 * var_(4) + var_(1) * dc01_ * (2.0*var_(2)-1.0) - Gamma(var_(0)) / 2.0 * var_(3),
+		-E01 * var_(3) - Gamma(var_(0)) / 2.0 * var_(4)
 	};
 }
 

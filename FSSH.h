@@ -2,6 +2,7 @@
 #define __FEWEST_SWITCHES_SURFACE_HOPPING_H__
 
 #include "TwoPara.h"
+#include "DecayRate.h"
 
 struct FSSH
 {
@@ -9,7 +10,7 @@ struct FSSH
 			double			const&		mass_,
 			double 			const& 		dt_,
 			arma::uword		const& 		nt_,
-			double			const&		Gamma_,
+			DecayRate		const&		Gamma_,
 			double			const&		beta_		);
 
 	void			initialize(bool const& state0_, double const& x0_, double const& v0_, double const& rho00_, std::complex<double> const& rho01_);
@@ -28,7 +29,7 @@ struct FSSH
 	arma::vec		dvar_dt(arma::vec const& var_);
 
 	TwoPara*		model;
-	double			Gamma; // parameter in the additional damping term
+	DecayRate		Gamma; // parameter in the additional damping term
 	double			beta; // parameter in the additional damping term
 	double 			mass;
 	double 			dt;

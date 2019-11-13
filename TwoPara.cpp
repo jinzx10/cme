@@ -10,6 +10,7 @@ TwoPara::TwoPara(
 {
 	double n_grid = (E_fermi + W_band) / Gamma * 30;
 	E_grid = arma::linspace(-W_band, E_fermi, n_grid);
+	E_grid.shed_row(0);
 	dE_grid = E_grid(1) - E_grid(0);
 	Re_Self = Gamma / 2.0 / arma::datum::pi *
 		arma::log( ( W_band + E_grid ) / ( W_band - E_grid ) );
@@ -23,7 +24,7 @@ double TwoPara::Ed(double const& x) {
 
 double TwoPara::ev_n(double const& x) {
 	return dE_grid * arma::sum( Gamma / 2.0 / arma::datum::pi /
-			( arma::square(E_grid - (E_fil(x) - E_mpt(x)) - Re_Self) + Gamma*Gamma/4.0 ) );
+			( arma::square(E_grid - Ed(x) - Re_Self) + Gamma*Gamma/4.0 ) );
 }
 
 

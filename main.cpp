@@ -15,7 +15,7 @@ int main() {
 
 	int id, nprocs;
 	int num_trajs = 9600;
-	std::string datadir = "/home/zuxin/job/cme/data/20191023/";
+	std::string datadir = "/home/zuxin/job/cme/data/20191113/";
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -27,20 +27,19 @@ int main() {
 	//							Two-Parabola model
 	/////////////////////////////////////////////////////////////////////////////
 	double x0_mpt = 2;
-	double x0_fil = 2.8;
-	double omega_mpt = 0.01;
-	double omega_fil = 0.01;
-	double mass = 7;
-	double dE_fil = 0.000;
+	double x0_fil = 2.3;
+	double omega= 0.002;
+	double mass = 14000;
+	double dE_fil = 0.0005;
 
-	auto E_mpt = [&](double const& x) { return 0.5 * mass * omega_mpt * omega_mpt * 
+	auto E_mpt = [&](double const& x) { return 0.5 * mass * omega* omega* 
 		(x - x0_mpt) * (x - x0_mpt);};
-	auto E_fil = [&](double const& x) { return 0.5 * mass * omega_fil * omega_fil * 
+	auto E_fil = [&](double const& x) { return 0.5 * mass * omega* omega* 
 		(x - x0_fil) * (x - x0_fil) + dE_fil;};
 
-	double bath_width = 0.06;
+	double bath_width = 0.05;
 	double mu = 0.0;
-	double Gamma = 5.0e-5;
+	double Gamma = 1.0e-4;
 
 	TwoPara model(E_mpt, E_fil, Gamma, mu, bath_width);
 
@@ -50,8 +49,8 @@ int main() {
 	/////////////////////////////////////////////////////////////////////////////
 
 	double dt = 1;
-	double nt = 300000;
-	double beta = 1.0 / 0.001;
+	double nt = 1000000;
+	double beta = 1.0 / 0.02;
 
 	// store all data
 	arma::mat x_t;
@@ -77,17 +76,18 @@ int main() {
 #endif
 	}
 
-	FSSH fssh(&model, mass, dt, nt, Gamma, beta);
+	DecayRate Gamma_(Gamma);
+	FSSH fssh(&model, mass, dt, nt, Gamma_, beta);
 	arma::arma_rng::set_seed_random();
 
 	// Wigner quasi-probability of the harmonic ground state:
 	// exp(-m*omega*x^2/hbar) * exp(-p^2/m/omega/hbar)
-	double sigma_x = std::sqrt(0.5/mass/omega_mpt);
-	double sigma_v = std::sqrt(omega_mpt/mass/2.0);
+	double sigma_x = std::sqrt(0.5/mass/omega);
+	double sigma_v = std::sqrt(omega/mass/2.0);
 	for (int i = 0; i != local_num_trajs; ++i) {
 		// nuclear 
 		double x0 = x0_mpt + arma::randn()*sigma_x;
-		double v0 = std::sqrt(2*0.002/mass) + arma::randn()*sigma_v; // diabatic barrier height ~ 0.002
+		double v0 = arma::randn()*sigma_v;
 
 		// electronic
 		arma::mat H_init = model.H_dia(x0);
@@ -110,9 +110,9 @@ int main() {
 	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	if (id == 0) {
-		x_t.save(datadir+"x_E0002.txt", arma::raw_ascii);
-		v_t.save(datadir+"v_E0002.txt", arma::raw_ascii);
-		state_t.save(datadir+"state_E0002.txt", arma::raw_ascii);
+		x_t.save(datadir+"x_t.txt", arma::raw_ascii);
+		v_t.save(datadir+"v_t.txt", arma::raw_ascii);
+		state_t.save(datadir+"state_t.txt", arma::raw_ascii);
 #ifdef TIMING
 		dur = iclock::now() - start;
 		std::cout << dur.count() << std::endl;

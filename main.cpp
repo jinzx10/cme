@@ -1,8 +1,9 @@
-#include "TwoPara.h"
-#include "FSSH.h"
-#include <mpi.h>
+#include <cstdlib>
 #include <sstream>
 #include <string>
+#include <mpi.h>
+#include "TwoPara.h"
+#include "FSSH.h"
 
 #ifdef TIMING
 #include <chrono>
@@ -14,8 +15,10 @@ double const pi = acos(-1.0);
 int main() {
 
 	int id, nprocs;
-	int num_trajs = 9600;
-	std::string datadir = "/home/zuxin/job/cme/data/20191113/";
+	int num_trajs = 960;
+	std::string datadir = "/home/zuxin/job/cme/data/20191114/";
+	std::string cmd;
+	const char* system_cmd = nullptr;
 
 	::MPI_Init(nullptr, nullptr);
 	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -48,18 +51,24 @@ int main() {
 	//							FSSH dynamics
 	/////////////////////////////////////////////////////////////////////////////
 
-	double dt = 1;
-	double nt = 1000000;
+	double dt = 10;
+	double nt = 20000;
 	double beta = 1.0 / 0.02;
 
-	// store all data
+	// global data
 	arma::mat x_t;
 	arma::mat v_t;
+	arma::mat rho00_t;
+	arma::mat Re_rho01_t;
+	arma::mat Im_rho01_t;
 	arma::umat state_t;
 
-	// store local data
+	// local data
 	arma::mat local_x_t = arma::zeros(nt, local_num_trajs);
 	arma::mat local_v_t = arma::zeros(nt, local_num_trajs);
+	arma::mat local_rho00_t = arma::zeros(nt, local_num_trajs);
+	arma::mat local_Re_rho01_t = arma::zeros(nt, local_num_trajs);
+	arma::mat local_Im_rho01_t = arma::zeros(nt, local_num_trajs);
 	arma::umat local_state_t = arma::zeros<arma::umat>(nt, local_num_trajs);
 
 #ifdef TIMING
@@ -71,6 +80,9 @@ int main() {
 		x_t.zeros(nt, num_trajs);
 		v_t.zeros(nt, num_trajs);
 		state_t.zeros(nt, num_trajs);
+		rho00_t.zeros(nt, num_trajs);
+		Re_rho01_t.zeros(nt, num_trajs);
+		Im_rho01_t.zeros(nt, num_trajs);
 #ifdef TIMING
 		start = iclock::now();
 #endif
@@ -97,22 +109,36 @@ int main() {
 		arma::mat rho_dia = {{1,0},{0,0}};
 		arma::mat rho_adi = eigvec.t() * rho_dia * eigvec;
 
-		bool state0 = ( arma::randu() < rho_adi(0,0) ); // does not really matter;
+		bool state0 = ( arma::randu() > rho_adi(0,0) );
 		fssh.initialize(state0, x0, v0, rho_adi(0,0), rho_adi(0,1));
 		fssh.propagate();
 		local_x_t.col(i) = fssh.x_t;
 		local_v_t.col(i) = fssh.v_t;
 		local_state_t.col(i) = fssh.state_t;
+		local_rho00_t.col(i) = fssh.rho00_t;
+		local_Re_rho01_t.col(i) = fssh.Re_rho01_t;
+		local_Im_rho01_t.col(i) = fssh.Im_rho01_t;
 	}
 
+	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	::MPI_Gather(local_x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, x_t.memptr(), local_x_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	::MPI_Gather(local_v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, v_t.memptr(), local_v_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	::MPI_Gather(local_state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, state_t.memptr(), local_state_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	::MPI_Gather(local_rho00_t.memptr(), local_rho00_t.n_elem, MPI_DOUBLE, rho00_t.memptr(), local_rho00_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	::MPI_Gather(local_Re_rho01_t.memptr(), local_Re_rho01_t.n_elem, MPI_DOUBLE, Re_rho01_t.memptr(), local_Re_rho01_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	::MPI_Gather(local_Im_rho01_t.memptr(), local_Im_rho01_t.n_elem, MPI_DOUBLE, Im_rho01_t.memptr(), local_Im_rho01_t.n_elem, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	if (id == 0) {
+		cmd = "mkdir -p " + datadir;
+		system_cmd = cmd.c_str();
+		std::system(system_cmd);
+
+		state_t.save(datadir+"state_t.txt", arma::raw_ascii);
 		x_t.save(datadir+"x_t.txt", arma::raw_ascii);
 		v_t.save(datadir+"v_t.txt", arma::raw_ascii);
-		state_t.save(datadir+"state_t.txt", arma::raw_ascii);
+		rho00_t.save(datadir+"rho00_t.txt", arma::raw_ascii);
+		Re_rho01_t.save(datadir+"Re_rho01_t.txt", arma::raw_ascii);
+		Im_rho01_t.save(datadir+"Im_rho01_t.txt", arma::raw_ascii);
+		
 #ifdef TIMING
 		dur = iclock::now() - start;
 		std::cout << dur.count() << std::endl;

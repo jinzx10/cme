@@ -31,6 +31,11 @@ struct TwoPara
 	double			ev_H(double const& x);
 
 	arma::mat		H_dia(double const& x);
+
+	double			DELTA = 1e-3; // finite difference grid size for x
+	double			F(double const& x, bool const& state); // force on adiabatic PES
+	double			dc01(double const& x);
+
 };
 
 #endif

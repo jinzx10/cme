@@ -22,8 +22,8 @@ struct FSSH
 	void 			collect();
 
 	// physical quantities
-	double			F(double const& x, bool const& state_);
-	double 			dc01(double const& x);
+	//double			F(double const& x, bool const& state_);
+	//double 			dc01(double const& x);
 
 	// first-order differential equation
 	arma::vec		dvar_dt(arma::vec const& var_);
@@ -42,6 +42,9 @@ struct FSSH
 	// data storage for one trajectory
 	arma::vec		x_t;
 	arma::vec		v_t;
+	arma::vec		rho00_t;
+	arma::vec		Re_rho01_t;
+	arma::vec		Im_rho01_t;
 	arma::uvec		state_t;
 };
 

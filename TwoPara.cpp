@@ -49,3 +49,19 @@ arma::mat TwoPara::H_dia(double const& x) {
 
 	return H;
 }
+
+double TwoPara::F(double const& x, bool const& state) {
+	arma::vec valm = arma::eig_sym( H_dia(x-DELTA) );
+	arma::vec valp = arma::eig_sym( H_dia(x+DELTA) );
+	return ( valm(state) - valp(state) ) / 2.0 / DELTA;
+}
+
+double TwoPara::dc01(double const& x) {
+	arma::mat DH = ( H_dia(x+DELTA) - H_dia(x-DELTA) ) / 2.0 / DELTA;
+	arma::mat eigvec;
+	arma::vec eigval;
+	arma::eig_sym(eigval, eigvec, H_dia(x));
+	return std::abs(arma::as_scalar(
+				eigvec.col(0).t() * DH * eigvec.col(1) / (eigval(1) - eigval(0)) ) );
+}
+

@@ -1,10 +1,17 @@
 #include <armadillo>
 #include "SIAM.h"
 #include <chrono>
+#include <mpi.h>
 
 using iclock = std::chrono::high_resolution_clock;
 
 int main() {
+
+	int id, nprocs;
+
+	::MPI_Init(nullptr, nullptr);
+	::MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	::MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
 	double eps_d = -0.05;
 	double g = 0.0075;
@@ -26,24 +33,40 @@ int main() {
 	double xmid = (Ef_rough - eps_d - U/2.0) / g;
 	double xspan = (U/2 + Gamma*3) / g;
 	int nx = 200;
-
 	arma::vec xrange = arma::linspace<arma::vec>(xmid-xspan, xmid+xspan, nx);
 
-	arma::mat x_n = arma::zeros(nx, 2);
+	int nx_local = nx / nprocs;
 
+	iclock::time_point start;
 	std::chrono::duration<double> dur;
-	auto start = iclock::now();
-	for (arma::uword i = 0; i != xrange.n_elem; ++i) {
-		double x = xrange(i);
-		model.mfscf(x);
-		x_n(i,0) = x;
-		x_n(i,1) = model.n_imp;
+	arma::vec n_all;
+	arma::mat data;
+
+	if (id == 0) {
+		start = iclock::now();
+		n_all = arma::zeros(nx);
 	}
 
-	dur = iclock::now() - start;
-	std::cout << dur.count() << std::endl;
-	x_n.save("SIAM_x_n.txt", arma::raw_ascii);
+	arma::vec n_local = arma::zeros(nx_local);
+	for (int i = 0; i != nx_local; ++i) {
+		double x = xrange(id*nx_local+i);
+		model.mfscf(x);
+		n_local(i) = x;
+		n_local(i) = model.n_imp;
+		std::cout << i+1+id*nx_local << "/" << nx << " finished" << std::endl;
+	}
 
+	::MPI_Gather(n_local.memptr(), nx_local, MPI_DOUBLE, n_all.memptr(), nx_local, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	if (id == 0) {
+		dur = iclock::now() - start;
+		std::cout << dur.count() << std::endl;
+
+		data = arma::join_rows(xrange, n_all);
+		data.save("SIAM_x_n.txt", arma::raw_ascii);
+	}
+
+	::MPI_Finalize();
 
 	return 0;
 }

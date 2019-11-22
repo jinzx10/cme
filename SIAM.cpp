@@ -10,6 +10,8 @@ SIAM::SIAM(		d2d				const&		Ed_,
 	Ed(Ed_), cpl(cpl_), U(U_), bath(bath_), n_elec(n_elec_), n_val(n_val_)
 {
 	n_bath = bath_.n_elem;
+	n_occ = n_elec/2;
+	n_vir = n_bath + 1 - n_occ;
 	idx_F_occ = arma::span(0, n_bath/2-1);
 	idx_F_vir = arma::span(n_bath/2, n_bath);
 }
@@ -45,7 +47,7 @@ void SIAM::mfscf(double const& x) {
 
 	arma::uword counter = 0;
 	while ( std::abs(n_imp_old - n_imp_new) > tol_n_imp ) {
-		if (counter > n_scf) {
+		if (counter > max_scf_cycles) {
 			std::cout << "x = " << x << " mean-field SCF fails to converge." << std::endl;
 			break;
 		}
@@ -64,6 +66,9 @@ void SIAM::mfscf(double const& x) {
 	E_mf = 2 * arma::accu(val_Fock(idx_F_occ)) - U * n_imp * n_imp;
 }
 
+void SIAM::CIS_common() {
+}
+
 arma::subview<double> SIAM::vec_Fock_occ() {
 	return vec_Fock(arma::span::all, idx_F_occ);
 }
@@ -71,5 +76,23 @@ arma::subview<double> SIAM::vec_Fock_occ() {
 arma::subview<double> SIAM::vec_Fock_vir() {
 	return vec_Fock(arma::span::all, idx_F_vir);
 }
+
+arma::mat SIAM::Q_occ() {
+	arma::mat Q_raw =
+		arma::join_rows( vec_Fock_occ().row(n_bath).t(), arma::eye(n_occ, n_occ-1) );
+	arma::mat q,r;
+	arma::qr(q,r,Q_raw);
+	return q;
+}
+
+arma::mat SIAM::Q_vir() {
+	arma::mat Q_raw = 
+		arma::join_rows( vec_Fock_vir().row(n_bath).t(), arma::eye(n_vir, n_vir-1) );
+	arma::mat q,r;
+	arma::qr(q,r,Q_raw);
+	return q;
+}
+
+
 
 

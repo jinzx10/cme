@@ -119,20 +119,4 @@ void FSSH::propagate() {
 	}
 }
 
-/*
-double FSSH::F(double const& x, bool const& state_) {
-	arma::vec valm = arma::eig_sym( model->H_dia(x-DELTA) );
-	arma::vec valp = arma::eig_sym( model->H_dia(x+DELTA) );
-	return ( valm(state_) - valp(state_) ) / 2.0 / DELTA;
-}
-
-double FSSH::dc01(double const& x) {
-	arma::mat DH = ( model->H_dia(x+DELTA) - model->H_dia(x-DELTA) ) / 2.0 / DELTA;
-	arma::mat eigvec;
-	arma::vec eigval;
-	arma::eig_sym(eigval, eigvec, model->H_dia(x));
-	return std::abs(arma::as_scalar(
-				eigvec.col(0).t() * DH * eigvec.col(1) / (eigval(1) - eigval(0)) ) );
-}
-*/
 

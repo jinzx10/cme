@@ -21,10 +21,6 @@ struct FSSH
 	void 			hop();
 	void 			collect();
 
-	// physical quantities
-	//double			F(double const& x, bool const& state_);
-	//double 			dc01(double const& x);
-
 	// first-order differential equation
 	arma::vec		dvar_dt(arma::vec const& var_);
 

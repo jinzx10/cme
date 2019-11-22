@@ -25,6 +25,8 @@ struct SIAM
 	arma::uword				n_val;
 
 	arma::uword				n_bath;
+	arma::uword				n_occ;
+	arma::uword				n_vir;
 	arma::span				idx_F_occ;
 	arma::span				idx_F_vir;
 
@@ -41,9 +43,22 @@ struct SIAM
 	double					n2n(double const& x, double const& n);
 	void					mfscf(double const& x);
 
+	void					CIS_common();
+
+	arma::vec				vec_h;
+	arma::vec				vec_l;
+	arma::mat				Ftoo;
+	arma::mat				Ftvv;
+
+
+
+
+
 	arma::subview<double>	vec_Fock_occ();
 	arma::subview<double>	vec_Fock_vir();
 
+	arma::mat				Q_occ();
+	arma::mat				Q_vir();
 
 
 };

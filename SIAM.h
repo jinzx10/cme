@@ -16,6 +16,7 @@ struct SIAM
 			arma::uword		const&		n_elec,
 			arma::uword		const&		n_val		);
 
+	// impurity on-site energy
 	d2d						Ed;
 	d2v						cpl;
 

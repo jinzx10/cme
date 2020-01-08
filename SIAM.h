@@ -16,7 +16,8 @@ struct SIAM
 			arma::uword		const&		n_elec,
 			arma::uword		const&		n_val		);
 
-	// impurity on-site energy
+	// impurity on-site energy and impurity-bath coupling amplitudes
+	// both are functions of the nuclear coordinate (which is a double)
 	d2d						Ed;
 	d2v						cpl;
 
@@ -34,8 +35,8 @@ struct SIAM
 	arma::uword				max_scf_cycles = 50;
 	double					tol_n_imp = 1e-10;
 
-	double					E_mf;
-	double					n_imp;
+	double					E_mf = -1;
+	double					n_imp = -1;
 	arma::mat				vec_Fock;
 	arma::vec				val_Fock;
 
@@ -50,10 +51,6 @@ struct SIAM
 	arma::vec				vec_l;
 	arma::mat				Ftoo;
 	arma::mat				Ftvv;
-
-
-
-
 
 	arma::subview<double>	vec_Fock_occ();
 	arma::subview<double>	vec_Fock_vir();

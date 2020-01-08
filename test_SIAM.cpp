@@ -34,6 +34,9 @@ int main() {
 	double xspan = (U/2 + Gamma*3) / g;
 	int nx = 200;
 	arma::vec xrange = arma::linspace<arma::vec>(xmid-xspan, xmid+xspan, nx);
+	
+	//nx = 1;
+	//xrange = xrange(84);
 
 	int nx_local = nx / nprocs;
 
@@ -63,7 +66,7 @@ int main() {
 		std::cout << dur.count() << std::endl;
 
 		data = arma::join_rows(xrange, n_all);
-		data.save("SIAM_x_n.txt", arma::raw_ascii);
+		data.save("data/SIAM_x_n.txt", arma::raw_ascii);
 	}
 
 	::MPI_Finalize();

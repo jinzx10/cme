@@ -1,5 +1,6 @@
 #include "SIAM.h"
 #include <iostream>
+#include "newtonroot.h"
 
 SIAM::SIAM(		d2d				const&		Ed_,
 				d2v 			const& 		cpl_,
@@ -12,8 +13,8 @@ SIAM::SIAM(		d2d				const&		Ed_,
 	n_bath = bath_.n_elem;
 	n_occ = n_elec/2;
 	n_vir = n_bath + 1 - n_occ;
-	idx_F_occ = arma::span(0, n_bath/2-1);
-	idx_F_vir = arma::span(n_bath/2, n_bath);
+	idx_F_occ = arma::span(0, n_occ-1); // indices of the occupied orbitals in the Fock matrix
+	idx_F_vir = arma::span(n_occ, n_bath);
 }
 
 double SIAM::E_eff(double const& x, double const& n) {
@@ -41,6 +42,9 @@ void SIAM::mfscf(double const& x) {
 	double n_imp_old = ( Ed(x) < bath(n_elec/2) );
 #endif
 
+	std::function<double(double)> dn = [this, x=x](double const& n) {return n2n(x, n) - n;};
+	n_imp = newtonroot(dn, n_imp_old);
+	/*
 	double n_imp_new = n2n(x, n_imp_old);
 	double g_old = n_imp_new - n_imp_old;
 	double g_new = 0.0, dg = 0.0;
@@ -62,7 +66,8 @@ void SIAM::mfscf(double const& x) {
 	}
 
 	n_imp = n_imp_new;
-	arma::eig_sym(val_Fock, vec_Fock, Fock(x,n_imp));
+	*/
+	arma::eig_sym( val_Fock, vec_Fock, Fock(x, n_imp) );
 	E_mf = 2 * arma::accu(val_Fock(idx_F_occ)) - U * n_imp * n_imp;
 }
 

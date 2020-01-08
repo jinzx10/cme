@@ -9,6 +9,7 @@ double newtonroot(std::function<double(double)> f, double const& x0, double cons
 		J = ( f(x+dx) - f(x-dx) ) / 2.0 / dx;
 		double fx = f(x);
 		x -= fx / J;
+		//std::cout << x << std::endl;
 		if ( std::abs(f(x)) < tol )
 			break;
 		counter += 1;
